@@ -5,45 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo List (Vanilla)</title>
     <link rel="stylesheet" href="style.css" />
+    <style>
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        color: #fff;
+        border-radius: 8px;
+        z-index: 9999;
+        font-family: sans-serif;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideIn 0.3s ease-out;
+      }
+      .toast-success {
+        background: #2ecc71;
+      }
+      .toast-error {
+        background: #e74c3c;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateY(100px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
 
   <body>
     <div class="app">
-      <!-- Header -->
+      <div id="loading-overlay" class="loading-overlay"></div>
+
       <header class="app-header">
         <div class="brand">
           <div class="logo" aria-hidden="true">✓</div>
           <div>
             <h1 class="title">Todo List</h1>
             <p class="subtitle">Vanilla JS + API (paginated)</p>
+            <small id="status-text"
+              ><span id="status-dot" class="status-dot"></span>
+              Tekshirilmoqda...</small
+            >
           </div>
         </div>
 
         <div class="header-actions">
-          <button class="btn btn-ghost" type="button" data-action="refresh">
+          <button class="btn btn-ghost" type="button" id="refresh-btn">
             Refresh
-          </button>
-          <button
-            class="btn btn-primary"
-            type="button"
-            data-action="open-create"
-          >
-            + New todo
           </button>
         </div>
       </header>
 
-      <!-- Main -->
       <main class="card">
-        <!-- Top controls -->
         <section class="controls">
           <div class="search">
             <span class="icon" aria-hidden="true">⌕</span>
             <input
+              id="search-input"
               type="search"
               placeholder="Search by title..."
               aria-label="Search todo by title"
-              data-field="search"
             />
           </div>
 
@@ -59,19 +85,11 @@
                 Completed
               </button>
             </div>
-
-            <select class="select" aria-label="Sort" data-field="sort">
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="az">A → Z</option>
-              <option value="za">Z → A</option>
-            </select>
           </div>
         </section>
 
-        <!-- Create form (siz JS bilan submit qilasiz) -->
         <section class="create">
-          <form class="create-form" data-form="create">
+          <form class="create-form" id="todo-form">
             <div class="field">
               <label for="todoTitle">Title</label>
               <input
@@ -94,204 +112,70 @@
             </div>
 
             <div class="create-actions">
-              <button
-                class="btn btn-primary"
-                type="submit"
-                data-action="create"
-                id="addTodo"
-              >
-                Add
+              <button class="btn btn-primary" type="submit" id="add-btn">
+                Qo'shish
               </button>
-              <button
-                class="btn btn-ghost"
-                type="reset"
-                data-action="reset-form"
-              >
-                Clear
-              </button>
+              <button class="btn btn-ghost" type="reset">Clear</button>
             </div>
           </form>
+
           <div class="stats" aria-live="polite">
             <div class="pill">
               <span class="dot dot-blue" aria-hidden="true"></span>
               <span>Total:</span>
-              <strong data-stat="count">2</strong>
+              <strong id="stat-total">0</strong>
             </div>
             <div class="pill">
               <span class="dot dot-green" aria-hidden="true"></span>
               <span>Done:</span>
-              <strong data-stat="done">1</strong>
+              <strong id="stat-done">0</strong>
             </div>
             <div class="pill">
               <span class="dot dot-orange" aria-hidden="true"></span>
               <span>Active:</span>
-              <strong data-stat="active">1</strong>
+              <strong id="stat-active">0</strong>
             </div>
           </div>
         </section>
 
-        <!-- List -->
         <section class="list-wrap">
-          <ul class="todo-list" data-list="todos">
-            <!-- EXAMPLE TODO #1 (active) -->
-            <li class="todo-item" data-id="1" data-completed="false">
-              <button
-                class="check"
-                type="button"
-                aria-label="Mark as completed"
-                data-action="toggle"
-              >
-                <span class="check-icon" aria-hidden="true"></span>
-              </button>
+          <div id="list-spinner"></div>
+          <ul class="todo-list" id="todo-list"></ul>
 
-              <div class="todo-content">
-                <div class="todo-top">
-                  <h3 class="todo-title">Express bilan TODO API yozish</h3>
-                  <span class="badge badge-active">Active</span>
-                </div>
-                <p class="todo-desc">
-                  CRUD endpointlar: GET (pagination), POST, PATCH, DELETE.
-                  UI’dan ishlatib ko‘rish.
-                </p>
-
-                <div class="meta">
-                  <span class="meta-item">
-                    <span class="meta-label">ID:</span>
-                    <span class="meta-value">1</span>
-                  </span>
-                  <span class="meta-item">
-                    <span class="meta-label">Created:</span>
-                    <span class="meta-value">2026-05-14</span>
-                  </span>
-                </div>
-              </div>
-
-              <div class="todo-actions">
-                <button
-                  class="icon-btn"
-                  type="button"
-                  title="Edit"
-                  data-action="edit"
-                >
-                  ✎
-                </button>
-                <button
-                  class="icon-btn danger"
-                  type="button"
-                  title="Delete"
-                  data-action="delete"
-                >
-                  🗑
-                </button>
-              </div>
-            </li>
-
-            <!-- EXAMPLE TODO #2 (completed) -->
-            <li class="todo-item is-done" data-id="2" data-completed="true">
-              <button
-                class="check is-checked"
-                type="button"
-                aria-label="Mark as active"
-                data-action="toggle"
-              >
-                <span class="check-icon" aria-hidden="true">✓</span>
-              </button>
-
-              <div class="todo-content">
-                <div class="todo-top">
-                  <h3 class="todo-title">
-                    Swagger response formatni tushunish
-                  </h3>
-                  <span class="badge badge-done">Completed</span>
-                </div>
-                <p class="todo-desc">
-                  API response: <code>count</code>, <code>next</code>,
-                  <code>previous</code>, <code>results</code> bilan keladi.
-                </p>
-
-                <div class="meta">
-                  <span class="meta-item">
-                    <span class="meta-label">ID:</span>
-                    <span class="meta-value">2</span>
-                  </span>
-                  <span class="meta-item">
-                    <span class="meta-label">Created:</span>
-                    <span class="meta-value">2026-05-13</span>
-                  </span>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </section>
-      </main>
-    </div>
-  </body>
-</html>
-              <div class="todo-actions">
-                <button
-                  class="icon-btn"
-                  type="button"
-                  title="Edit"
-                  data-action="edit"
-                >
-                  ✎
-                </button>
-                <button
-                  class="icon-btn danger"
-                  type="button"
-                  title="Delete"
-                  data-action="delete"
-                >
-                  🗑
-                </button>
-              </div>
-            </li>
-          </ul>
-
-          <!-- Empty state (JS bilan ko‘rsatib/yashirasiz) -->
-          <div class="empty" hidden data-state="empty">
+          <div class="empty" id="empty-state" style="display: none">
             <div class="empty-emoji" aria-hidden="true">📭</div>
             <h3>Hali todo yo‘q</h3>
             <p>Yangi todo qo‘shing yoki API’dan olib keling.</p>
           </div>
         </section>
 
-        <!-- Pagination (API pagination uchun) -->
-        <footer class="pager">
-          <button
-            class="btn btn-ghost"
-            type="button"
-            data-action="prev"
-            disabled
-          >
+        <footer class="pager" id="pager">
+          <button class="btn btn-ghost" type="button" id="prev-btn">
             ← Prev
           </button>
-
           <div class="page-info">
             <span>Page</span>
-            <strong data-page="current">1</strong>
+            <strong id="page-current">1</strong>
             <span>/</span>
-            <strong data-page="total">1</strong>
+            <strong id="page-total">1</strong>
           </div>
-
-          <button
-            class="btn btn-ghost"
-            type="button"
-            data-action="next"
-            disabled
-          >
+          <button class="btn btn-ghost" type="button" id="next-btn">
             Next →
           </button>
         </footer>
       </main>
 
-      <footer class="app-footer">
-        <small
-          >Tip: elementlarga <code>data-*</code> qo‘yilgan — JS bilan ulash
-          oson.</small
-        >
-      </footer>
+      <div id="confirm-modal" class="modal" style="display: none">
+        <div class="modal-content">
+          <p class="confirm-text">Vazifani o'chirmoqchimisiz?</p>
+          <button class="btn btn-danger" onclick="confirmDelete()">
+            Ha, o'chirish
+          </button>
+          <button class="btn btn-ghost" onclick="closeConfirm()">Yo'q</button>
+        </div>
+      </div>
     </div>
-    <script src="./app.js"></script>
+
+    <script src="app.js"></script>
   </body>
 </html>
